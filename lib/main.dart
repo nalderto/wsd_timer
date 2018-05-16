@@ -1,10 +1,22 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:audioplayer/audioplayer.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:typed_data';
+import 'dart:io';
+import 'package:flutter/services.dart';
 
-void main() => runApp(new TimerApp());
+void main() {
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  runApp(new TimerApp());
+}
 
 class TimerApp extends StatelessWidget {
   // This widget is the root of your application.
+
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
@@ -37,6 +49,20 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  String localFilePath;
+
+  AudioPlayer audioPlayer = new AudioPlayer();
+
+  Future<ByteData> loadAsset() async {
+    return await rootBundle.load('assets/ding.mp3');
+  }
+
+  void playDing() async {
+    final file = new File('${(await getTemporaryDirectory()).path}/ding.mp3');
+    await file.writeAsBytes((await loadAsset()).buffer.asUint8List());
+    await audioPlayer.play(file.path, isLocal: true);
+  }
+
   static String startButtonText = "Start";
   static IconData startButtonIcon = Icons.play_arrow;
 
@@ -44,28 +70,64 @@ class _MyHomePageState extends State<MyHomePage> {
 
   static Stopwatch stopwatch = new Stopwatch();
   String time = "0:00";
-  static const second = const Duration(seconds: 1);
+  static const halfSecond = const Duration(milliseconds: 500);
   void updateClock() {
-        if (((stopwatch.elapsed.inSeconds == 1) || (stopwatch.elapsed.inSeconds == 420)) && !isSnackBar){
-                  _scaffoldkey.currentState.showSnackBar(protectedTime);
-                  isSnackBar = true;
-                  print(49);
-        }
-        if (((stopwatch.elapsed.inSeconds == 60) || (stopwatch.elapsed.inSeconds == 480)) && isSnackBar){
-                  _scaffoldkey.currentState.hideCurrentSnackBar(); 
-                  print(53);
-                  isSnackBar = false;
-      }
     setState(() {
       time =
           "${stopwatch.elapsed.inMinutes.toString()}:${((stopwatch.elapsed.inSeconds)%60).toString().padLeft(2, "0")}";
     });
+
+    if (currentRound == 6 || currentRound == 7) {
+      if (stopwatch.elapsed.inSeconds == 1) {
+        _scaffoldkey.currentState.showSnackBar(protectedTime);
+      } else if (stopwatch.elapsed.inSeconds == 240) {
+        _scaffoldkey.currentState.hideCurrentSnackBar();
+        _scaffoldkey.currentState.showSnackBar(overtime);
+      }
+      return;
+    }
+
+    if (((stopwatch.elapsed.inSeconds == 1) ||
+            (stopwatch.elapsed.inSeconds == 420)) &&
+        !isSnackBar) {
+      _scaffoldkey.currentState.showSnackBar(protectedTime);
+      isSnackBar = true;
+      if (stopwatch.elapsed.inSeconds == 420) {
+        playDing();
+      }
+    } else if (((stopwatch.elapsed.inSeconds == 60) ||
+            (stopwatch.elapsed.inSeconds == 480)) &&
+        isSnackBar) {
+      _scaffoldkey.currentState.hideCurrentSnackBar();
+      isSnackBar = false;
+      if (stopwatch.elapsed.inSeconds == 60) {
+        playDing();
+      } else if (stopwatch.elapsed.inSeconds == 480 && stopwatch.isRunning) {
+        isSnackBar = true;
+        _scaffoldkey.currentState.showSnackBar(overtime);
+      }
+    }
+
+    if (!stopwatch.isRunning &&
+        isSnackBar == true &&
+        stopwatch.elapsed.inSeconds > 480) {
+      _scaffoldkey.currentState.hideCurrentSnackBar();
+      isSnackBar = false;
+    }
   }
 
   SnackBar protectedTime = new SnackBar(
-    content: Text("Protected Time"),
+    content: Text("Protected Time", style: TextStyle(fontSize: 24.0)),
+    backgroundColor: Colors.orangeAccent,
+    duration: Duration(seconds: 600),
+  );
+  SnackBar overtime = new SnackBar(
+    content: Text(
+      "Overtime",
+      style: TextStyle(fontSize: 24.0),
+    ),
     backgroundColor: Colors.red,
-    duration: Duration(seconds: 60),
+    duration: Duration(seconds: 600),
   );
 
   static const _roundNames = <String>[
@@ -75,8 +137,8 @@ class _MyHomePageState extends State<MyHomePage> {
     'Opposition 2',
     'Proposition 3',
     'Opposition 3',
-    'Proposition Reply',
     'Opposition Reply',
+    'Proposition Reply',
   ];
 
   int currentRound = 0;
@@ -84,10 +146,16 @@ class _MyHomePageState extends State<MyHomePage> {
   final GlobalKey<ScaffoldState> _scaffoldkey = new GlobalKey<ScaffoldState>();
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    new Timer.periodic(halfSecond, (Timer T) => updateClock());
+  }
+
+  @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
-    new Timer.periodic(second, (Timer T) => updateClock());
 
     return new Scaffold(
       appBar: new AppBar(
@@ -107,7 +175,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           //Timer Text
           new Container(
-            padding: new EdgeInsets.all(32.0),
+            padding: new EdgeInsets.only(bottom: 42.0, top: 10.0),
             child: new Text(
               "$time",
               textAlign: TextAlign.center,
@@ -137,7 +205,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   stopwatch.reset();
                   stopwatch.stop();
                   updateClock();
-                  _scaffoldkey.currentState.hideCurrentSnackBar(); 
+                  _scaffoldkey.currentState.hideCurrentSnackBar();
                   setState(() {
                     if (currentRound > 0) {
                       currentRound--;
@@ -151,10 +219,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () {
                   print("Start Button Pressed");
                   if (!stopwatch.isRunning) {
-                    startButtonIcon = Icons.pause;
+                    setState(() {
+                      startButtonIcon = Icons.pause;
+                    });
                     stopwatch.start();
                   } else if (stopwatch.isRunning) {
-                    startButtonIcon = Icons.play_arrow;
+                    setState(() {
+                      startButtonIcon = Icons.play_arrow;
+                    });
                     stopwatch.stop();
                   }
                 },
@@ -171,9 +243,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   stopwatch.reset();
                   stopwatch.stop();
                   updateClock();
-                  _scaffoldkey.currentState.hideCurrentSnackBar(); 
+                  _scaffoldkey.currentState.hideCurrentSnackBar();
                   setState(() {
                     currentRound = 0;
+                    startButtonIcon = Icons.play_arrow;
                   });
                 },
                 color: Colors.red,
@@ -202,7 +275,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   stopwatch.reset();
                   stopwatch.stop();
                   updateClock();
-                  _scaffoldkey.currentState.hideCurrentSnackBar(); 
+                  _scaffoldkey.currentState.hideCurrentSnackBar();
                   setState(() {
                     if (currentRound < 7) {
                       currentRound++;
