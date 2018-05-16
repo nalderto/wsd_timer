@@ -87,22 +87,19 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
     }
 
-    if (((stopwatch.elapsed.inSeconds == 1) ||
-            (stopwatch.elapsed.inSeconds == 420)) &&
-        !isSnackBar) {
+    if (((stopwatch.elapsed.inSeconds == 1) || (stopwatch.elapsed.inSeconds == 420)) && !isSnackBar) {
       _scaffoldkey.currentState.showSnackBar(protectedTime);
       isSnackBar = true;
       if (stopwatch.elapsed.inSeconds == 420) {
         playDing();
       }
-    } else if (((stopwatch.elapsed.inSeconds == 60) ||
-            (stopwatch.elapsed.inSeconds == 480)) &&
-        isSnackBar) {
+    } else if (((stopwatch.elapsed.inSeconds == 60) ||(stopwatch.elapsed.inSeconds == 480)) && isSnackBar) {
       _scaffoldkey.currentState.hideCurrentSnackBar();
       isSnackBar = false;
       if (stopwatch.elapsed.inSeconds == 60) {
         playDing();
       } else if (stopwatch.elapsed.inSeconds == 480 && stopwatch.isRunning) {
+        playDing();
         isSnackBar = true;
         _scaffoldkey.currentState.showSnackBar(overtime);
       }
