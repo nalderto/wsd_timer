@@ -36,13 +36,13 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   //AudioPlayer Methods
   String localFilePath;
   AudioPlayer audioPlayer = new AudioPlayer();
   Future<ByteData> loadAsset() async {
     return await rootBundle.load('assets/ding.mp3');
   }
+
   void playDing() async {
     final file = new File('${(await getTemporaryDirectory()).path}/ding.mp3');
     await file.writeAsBytes((await loadAsset()).buffer.asUint8List());
@@ -74,7 +74,8 @@ class _MyHomePageState extends State<MyHomePage> {
   static const halfSecond = const Duration(milliseconds: 500);
   void updateClock() {
     setState(() {
-      time = "${stopwatch.elapsed.inMinutes.toString()}:${((stopwatch.elapsed.inSeconds)%60).toString().padLeft(2, "0")}";
+      time =
+          "${stopwatch.elapsed.inMinutes.toString()}:${((stopwatch.elapsed.inSeconds)%60).toString().padLeft(2, "0")}";
     });
 
     if (currentRound == 6 || currentRound == 7) {
@@ -83,29 +84,33 @@ class _MyHomePageState extends State<MyHomePage> {
       } else if (stopwatch.elapsed.inSeconds == 240) {
         _scaffoldkey.currentState.hideCurrentSnackBar();
         _scaffoldkey.currentState.showSnackBar(overtime);
-        if(!isMuted){
+        if (!isMuted) {
           playDing();
         }
       }
       return;
     }
 
-    if (((stopwatch.elapsed.inSeconds == 1) || (stopwatch.elapsed.inSeconds == 420)) && !isSnackBar) {
+    if (((stopwatch.elapsed.inSeconds == 1) ||
+            (stopwatch.elapsed.inSeconds == 420)) &&
+        !isSnackBar) {
       _scaffoldkey.currentState.showSnackBar(protectedTime);
       isSnackBar = true;
       if (stopwatch.elapsed.inSeconds == 420 && !isMuted) {
         playDing();
       }
-    } else if (((stopwatch.elapsed.inSeconds == 60) ||(stopwatch.elapsed.inSeconds == 480)) && isSnackBar) {
+    } else if (((stopwatch.elapsed.inSeconds == 60) ||
+            (stopwatch.elapsed.inSeconds == 480)) &&
+        isSnackBar) {
       _scaffoldkey.currentState.hideCurrentSnackBar();
       isSnackBar = false;
       if (stopwatch.elapsed.inSeconds == 60) {
-        if(!isMuted){
-        playDing();
+        if (!isMuted) {
+          playDing();
         }
-      } else if (stopwatch.elapsed.inSeconds == 480 && stopwatch.isRunning) {
-        if (!isMuted){
-        playDing();
+      } else if (stopwatch.elapsed.inSeconds == 480) {
+        if (!isMuted) {
+          playDing();
         }
         isSnackBar = true;
         _scaffoldkey.currentState.showSnackBar(overtime);
@@ -143,7 +148,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-
     return new Scaffold(
       appBar: new AppBar(
         title: new Text(widget.title),
@@ -154,26 +158,25 @@ class _MyHomePageState extends State<MyHomePage> {
           //Mute Button
           new Container(
             alignment: Alignment.topRight,
-            padding: new EdgeInsets.only(top:16.0),
+            padding: new EdgeInsets.only(top: 16.0),
             child: new FlatButton(
-            onPressed: (){
-              setState(() {
-                if(isMuted){
-                  isMuted = false;
-                  muteButtonIcon = Icons.volume_up;
-                }
-                else if (!isMuted){
-                  isMuted = true;
-                  muteButtonIcon = Icons.volume_off;
-                }
-              });
-            },
-            child: Icon(
-              muteButtonIcon,
-              size: 32.0,
+              onPressed: () {
+                setState(() {
+                  if (isMuted) {
+                    isMuted = false;
+                    muteButtonIcon = Icons.volume_up;
+                  } else if (!isMuted) {
+                    isMuted = true;
+                    muteButtonIcon = Icons.volume_off;
+                  }
+                });
+              },
+              child: Icon(
+                muteButtonIcon,
+                size: 32.0,
+              ),
+              shape: CircleBorder(),
             ),
-            shape: CircleBorder(),
-          ),
           ),
 
           //Round Text
