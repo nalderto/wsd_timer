@@ -83,6 +83,9 @@ class _MyHomePageState extends State<MyHomePage> {
       } else if (stopwatch.elapsed.inSeconds == 240) {
         _scaffoldkey.currentState.hideCurrentSnackBar();
         _scaffoldkey.currentState.showSnackBar(overtime);
+        if(!isMuted){
+          playDing();
+        }
       }
       return;
     }
