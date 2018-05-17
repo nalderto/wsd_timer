@@ -7,16 +7,14 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 
 void main() {
+  //Only Works in Portait Mode
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
   ]);
   runApp(new TimerApp());
 }
 
 class TimerApp extends StatelessWidget {
-  // This widget is the root of your application.
-
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
@@ -32,49 +30,51 @@ class TimerApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
-
   @override
   _MyHomePageState createState() => new _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
+  //AudioPlayer Methods
   String localFilePath;
-
   AudioPlayer audioPlayer = new AudioPlayer();
-
   Future<ByteData> loadAsset() async {
     return await rootBundle.load('assets/ding.mp3');
   }
-
   void playDing() async {
     final file = new File('${(await getTemporaryDirectory()).path}/ding.mp3');
     await file.writeAsBytes((await loadAsset()).buffer.asUint8List());
     await audioPlayer.play(file.path, isLocal: true);
   }
 
+  //Variables
+  int currentRound = 0;
+  final GlobalKey<ScaffoldState> _scaffoldkey = new GlobalKey<ScaffoldState>();
   static String startButtonText = "Start";
   static IconData startButtonIcon = Icons.play_arrow;
-
+  static IconData muteButtonIcon = Icons.volume_up;
   bool isSnackBar = false;
+  bool isMuted = false;
+  static const _roundNames = <String>[
+    'Proposition 1',
+    'Opposition 1',
+    'Proposition 2',
+    'Opposition 2',
+    'Proposition 3',
+    'Opposition 3',
+    'Opposition Reply',
+    'Proposition Reply',
+  ];
 
+  //Timer Methods
   static Stopwatch stopwatch = new Stopwatch();
   String time = "0:00";
   static const halfSecond = const Duration(milliseconds: 500);
   void updateClock() {
     setState(() {
-      time =
-          "${stopwatch.elapsed.inMinutes.toString()}:${((stopwatch.elapsed.inSeconds)%60).toString().padLeft(2, "0")}";
+      time = "${stopwatch.elapsed.inMinutes.toString()}:${((stopwatch.elapsed.inSeconds)%60).toString().padLeft(2, "0")}";
     });
 
     if (currentRound == 6 || currentRound == 7) {
@@ -90,16 +90,20 @@ class _MyHomePageState extends State<MyHomePage> {
     if (((stopwatch.elapsed.inSeconds == 1) || (stopwatch.elapsed.inSeconds == 420)) && !isSnackBar) {
       _scaffoldkey.currentState.showSnackBar(protectedTime);
       isSnackBar = true;
-      if (stopwatch.elapsed.inSeconds == 420) {
+      if (stopwatch.elapsed.inSeconds == 420 && !isMuted) {
         playDing();
       }
     } else if (((stopwatch.elapsed.inSeconds == 60) ||(stopwatch.elapsed.inSeconds == 480)) && isSnackBar) {
       _scaffoldkey.currentState.hideCurrentSnackBar();
       isSnackBar = false;
       if (stopwatch.elapsed.inSeconds == 60) {
+        if(!isMuted){
         playDing();
+        }
       } else if (stopwatch.elapsed.inSeconds == 480 && stopwatch.isRunning) {
+        if (!isMuted){
         playDing();
+        }
         isSnackBar = true;
         _scaffoldkey.currentState.showSnackBar(overtime);
       }
@@ -113,6 +117,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  //SnackBars
   SnackBar protectedTime = new SnackBar(
     content: Text("Protected Time", style: TextStyle(fontSize: 24.0)),
     backgroundColor: Colors.orangeAccent,
@@ -127,49 +132,54 @@ class _MyHomePageState extends State<MyHomePage> {
     duration: Duration(seconds: 600),
   );
 
-  static const _roundNames = <String>[
-    'Proposition 1',
-    'Opposition 1',
-    'Proposition 2',
-    'Opposition 2',
-    'Proposition 3',
-    'Opposition 3',
-    'Opposition Reply',
-    'Proposition Reply',
-  ];
-
-  int currentRound = 0;
-
-  final GlobalKey<ScaffoldState> _scaffoldkey = new GlobalKey<ScaffoldState>();
-
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     new Timer.periodic(halfSecond, (Timer T) => updateClock());
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
 
     return new Scaffold(
       appBar: new AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: new Text(widget.title),
       ),
       key: _scaffoldkey,
       body: new Column(
-        //mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
+          //Mute Button
+          new Container(
+            alignment: Alignment.topRight,
+            padding: new EdgeInsets.only(top:16.0),
+            child: new FlatButton(
+            onPressed: (){
+              setState(() {
+                if(isMuted){
+                  isMuted = false;
+                  muteButtonIcon = Icons.volume_up;
+                }
+                else if (!isMuted){
+                  isMuted = true;
+                  muteButtonIcon = Icons.volume_off;
+                }
+              });
+            },
+            child: Icon(
+              muteButtonIcon,
+              size: 32.0,
+            ),
+            shape: CircleBorder(),
+          ),
+          ),
+
           //Round Text
           new Container(
-            padding: const EdgeInsets.all(32.0),
+            padding: const EdgeInsets.all(24.0),
             child: new Text("${_roundNames[currentRound]}",
                 style: TextStyle(color: Colors.blue, fontSize: 32.0)),
           ),
+
           //Timer Text
           new Container(
             padding: new EdgeInsets.only(bottom: 42.0, top: 10.0),
@@ -182,6 +192,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
+
           new Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
@@ -203,6 +214,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   stopwatch.stop();
                   updateClock();
                   _scaffoldkey.currentState.hideCurrentSnackBar();
+                  isSnackBar = false;
                   setState(() {
                     if (currentRound > 0) {
                       currentRound--;
@@ -241,6 +253,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   stopwatch.stop();
                   updateClock();
                   _scaffoldkey.currentState.hideCurrentSnackBar();
+                  isSnackBar = false;
                   setState(() {
                     currentRound = 0;
                     startButtonIcon = Icons.play_arrow;
@@ -273,6 +286,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   stopwatch.stop();
                   updateClock();
                   _scaffoldkey.currentState.hideCurrentSnackBar();
+                  isSnackBar = false;
                   setState(() {
                     if (currentRound < 7) {
                       currentRound++;
