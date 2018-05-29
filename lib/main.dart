@@ -7,7 +7,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 
 void main() {
-  //Only Works in Portait Mode
+  //Only Works in Portrait Mode
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
@@ -79,8 +79,9 @@ class _MyHomePageState extends State<MyHomePage> {
     });
 
     if (currentRound == 6 || currentRound == 7) {
-      if (stopwatch.elapsed.inSeconds == 1) {
+      if (stopwatch.elapsed.inSeconds == 0 && stopwatch.isRunning && !isSnackBar) {
         _scaffoldkey.currentState.showSnackBar(protectedTime);
+        isSnackBar = true;
       } else if (stopwatch.elapsed.inSeconds == 240) {
         _scaffoldkey.currentState.hideCurrentSnackBar();
         _scaffoldkey.currentState.showSnackBar(overtime);
@@ -91,7 +92,7 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
     }
 
-    if (((stopwatch.elapsed.inSeconds == 1) ||
+    if (((stopwatch.elapsed.inSeconds == 0 && stopwatch.isRunning && !isSnackBar) ||
             (stopwatch.elapsed.inSeconds == 420)) &&
         !isSnackBar) {
       _scaffoldkey.currentState.showSnackBar(protectedTime);
