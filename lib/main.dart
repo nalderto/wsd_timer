@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:audioplayer/audioplayer.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:typed_data';
 import 'dart:io';
@@ -75,7 +75,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void updateClock() {
     setState(() {
       time =
-          "${stopwatch.elapsed.inMinutes.toString()}:${((stopwatch.elapsed.inSeconds)%60).toString().padLeft(2, "0")}";
+      "${stopwatch.elapsed.inMinutes.toString()}:${((stopwatch.elapsed.inSeconds)%60).toString().padLeft(2, "0")}";
     });
 
     if (currentRound == 6 || currentRound == 7) {
@@ -93,7 +93,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     if (((stopwatch.elapsed.inSeconds == 0 && stopwatch.isRunning && !isSnackBar) ||
-            (stopwatch.elapsed.inSeconds == 420)) &&
+        (stopwatch.elapsed.inSeconds == 420)) &&
         !isSnackBar) {
       _scaffoldkey.currentState.showSnackBar(protectedTime);
       isSnackBar = true;
@@ -101,7 +101,7 @@ class _MyHomePageState extends State<MyHomePage> {
         playDing();
       }
     } else if (((stopwatch.elapsed.inSeconds == 60) ||
-            (stopwatch.elapsed.inSeconds == 480)) &&
+        (stopwatch.elapsed.inSeconds == 480)) &&
         isSnackBar) {
       _scaffoldkey.currentState.hideCurrentSnackBar();
       isSnackBar = false;
