@@ -39,7 +39,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.alderton.wsd_timer"
+        applicationId "com.alderton.wsdtimer"
         minSdkVersion 16
         targetSdkVersion 28
         versionCode flutterVersionCode.toInteger()
